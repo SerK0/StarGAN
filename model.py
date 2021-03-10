@@ -300,6 +300,8 @@ class Discriminator(nn.Module):
         :param torch.Tensor x: image with dims B x C x H x W
         :rtype: Tuple[torch.Tensor, torch.Tensor]
         :returns: Feature map(Real or Fake) and distribution of domain labels
+        output_src[batch_size, 1, h/64, w/64]
+        output_cls[batch_size, n_domain, 1, 1]
         """
         x = self.input_layer(x)
         x = self.hidden_layers(x)
@@ -375,7 +377,7 @@ class StarGan(nn.Module):
 
 if __name__ == "__main__":
     from imageio import imsave
-    from loss import AdversarialLoss
+    from loss import AdversarialLoss, DomainClassificationLoss
 
     batch_size, channels, n_domain, height, width = (4, 3, 5, 128, 128)
     images = torch.rand(batch_size, channels, height, width)
@@ -384,6 +386,11 @@ if __name__ == "__main__":
     model = StarGan(height, width)
     output = model.generate(images, labels)
 
+    output_src, output_cls = model.D(output)
+    print(output_src.size())
+    print(torch.squeeze(output_cls).size())
+
     adv_loss = AdversarialLoss()
+    dm_loss = DomainClassificationLoss()
     print(adv_loss(images, output))
-    
+    print(dm_loss(torch.squeeze(output_cls), labels))
