@@ -308,14 +308,82 @@ class Discriminator(nn.Module):
         return output_src, output_cls
 
 
-if __name__ == "__main__":
-    batch_size, channels, height, width = (4, 3, 128, 128)
-    image = torch.rand(batch_size, channels, height, width)
-    generator = Generator(in_channels=channels)
-    discriminator = Discriminator(
-        height=height, width=width, n_domain=5, in_channels=channels
-    )
+class StarGan(nn.Module):
+    def __init__(
+        self,
+        height: int = 64,
+        width: int = 64,
+        n_domain: int = 5,
+        in_channels: int = 3,
+        device="cpu",
+    ) -> None:
 
-    output_src, output_cls = discriminator(generator(image))
-    print(output_src.size())
-    print(output_cls.size())
+        super(StarGan, self).__init__()
+
+        self.height = height
+        self.width = width
+        self.G = Generator(in_channels=in_channels + n_domain)
+        self.D = Discriminator(height, width, n_domain, in_channels)
+
+        self.to(device)
+
+    def forward(self, x):
+        pass
+
+    def to(self, device):
+        self.D.to(device)
+        self.G.to(device)
+
+    def train(self):
+        self.G.train()
+        self.D.train()
+
+    def eval(self):
+        self.G.eval()
+        self.D.eval()
+
+    def concat_image_label(
+        self, image: torch.Tensor, label: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        :param torch.Tensor image: size batch_size x 3 x height x width
+        :param torch.Tensor label: size batch_size x n_domain
+        :rtype: torch.Tensor
+        :returns: concatenated image and labels of size batch_size x (3 + n_domain) x height x width
+        """
+        label = label[:, :, None, None].repeat(1, 1, self.height, self.width)
+        return torch.cat((image, label), dim=1)
+
+    def trainG(self, image, label):
+        pass
+
+    def trainD(self, image, label):
+        pass
+
+    @torch.no_grad()
+    def generate(self, image: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
+        """
+        :param torch.Tensor image: size batch_size x 3 x height x width
+        :param torch.Tensor label: size batch_size x n_domain
+        :rtype: torch.Tensor
+        :returns: images of size batch_size x 3 x height x width
+        """
+        self.eval()
+        images_labels = self.concat_image_label(image, label)
+        return self.G(images_labels)
+
+
+if __name__ == "__main__":
+    from imageio import imsave
+    from loss import AdversarialLoss
+
+    batch_size, channels, n_domain, height, width = (4, 3, 5, 128, 128)
+    images = torch.rand(batch_size, channels, height, width)
+    labels = torch.rand(batch_size, n_domain)
+
+    model = StarGan(height, width)
+    output = model.generate(images, labels)
+
+    adv_loss = AdversarialLoss()
+    print(adv_loss(images, output))
+    
