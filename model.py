@@ -377,20 +377,33 @@ class StarGan(nn.Module):
 
 if __name__ == "__main__":
     from imageio import imsave
-    from loss import AdversarialLoss, DomainClassificationLoss
+    from loss import (
+        AdversarialLoss,
+        DomainClassificationLoss,
+        ReconstructionLoss,
+        GeneratorLoss,
+    )
 
     batch_size, channels, n_domain, height, width = (4, 3, 5, 128, 128)
     images = torch.rand(batch_size, channels, height, width)
     labels = torch.rand(batch_size, n_domain)
 
     model = StarGan(height, width)
-    output = model.generate(images, labels)
+    model.train()
+    fake = model.G(model.concat_image_label(images, labels))
+    model.D.eval()
+    output_src, output_cls = model.D(fake)
 
-    output_src, output_cls = model.D(output)
-    print(output_src.size())
-    print(torch.squeeze(output_cls).size())
+    # adv_loss = AdversarialLoss()
+    # dm_loss = DomainClassificationLoss()
+    # rec_loss = ReconstructionLoss()
 
-    adv_loss = AdversarialLoss()
-    dm_loss = DomainClassificationLoss()
-    print(adv_loss(images, output))
-    print(dm_loss(torch.squeeze(output_cls), labels))
+    # loss_adv = adv_loss(fake_logits=output, real_logits=images)
+    # loss_dm = dm_loss(logit=torch.squeeze(output_cls), target=labels)
+    # loss_rec = rec_loss(real=images, reconstructed=output)
+    # print(f"AdversarialLoss = {loss_adv}")
+    # print(f"DomainClassificationLoss = {loss_dm}")
+    # print(f"ReconstructionLoss = {loss_rec}")
+
+    gen_loss = GeneratorLoss(discriminator=model.D)
+    print(gen_loss(images, fake, fake, labels))
