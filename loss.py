@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 from torch.nn.functional import binary_cross_entropy_with_logits
 
-from model import Discriminator, Generator
+from discriminator import Discriminator
+from generator import Generator
 
 
 class AdversarialLoss:
