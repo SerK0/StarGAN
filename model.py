@@ -1,12 +1,16 @@
+import warnings
 from typing import Tuple
 
 import torch
 from torch import nn
 
+from config import cfg
 from discriminator import Discriminator
 from generator import Generator
 from loss import DiscriminatorLoss, GeneratorLoss
 from utils import permute_labels
+
+warnings.filterwarnings("ignore")
 
 
 class StarGan(nn.Module):
@@ -27,6 +31,12 @@ class StarGan(nn.Module):
         self.D = Discriminator(height, width, n_domain, in_channels)
         self.generator_loss = GeneratorLoss(self.D)
         self.discriminator_loss = DiscriminatorLoss()
+        self.optimizer_generator = torch.optim.Adam(
+            self.G.parameters(), lr=cfg.training.G.lr, betas=cfg.training.G.betas
+        )
+        self.optimizer_dicriminator = torch.optim.Adam(
+            self.D.parameters(), lr=cfg.training.D.lr, betas=cfg.training.D.betas
+        )
 
         self.to(device)
 
@@ -83,8 +93,13 @@ class StarGan(nn.Module):
             labels_target=labels_target,
         )
 
-        #####TODO Add optimizator step
-        return loss
+        self.optimizer_generator.zero_grad()
+
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.G.parameters(), cfg.training.G.clipping)
+        self.optimizer_generator.step()
+
+        return loss.item()
 
     def trainD(
         self, real_image: torch.Tensor, labels_dataset: torch.Tensor
@@ -108,8 +123,12 @@ class StarGan(nn.Module):
         )
 
         #####TODO Compute loss for gradient penalty.
-        #####TODO Add optimizator step
-        return loss
+        self.optimizer_dicriminator.zero_grad()
+        torch.nn.utils.clip_grad_norm_(self.D.parameters(), cfg.training.D.clipping)
+        loss.backward()
+        self.optimizer_dicriminator.step()
+
+        return loss.item()
 
     @torch.no_grad()
     def generate(self, image: torch.Tensor, label: torch.Tensor) -> torch.Tensor:
@@ -137,5 +156,6 @@ if __name__ == "__main__":
 
     stargan.train()
     # loss_gen = stargan.trainG(real_image, labels_dataset)
+    # print(loss_gen)
     loss_dis = stargan.trainD(real_image, labels_dataset)
     print(loss_dis)
