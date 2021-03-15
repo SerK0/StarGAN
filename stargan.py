@@ -68,29 +68,34 @@ class StarGan(nn.Module):
         return torch.cat((image, label), dim=1)
 
     def trainG(
-        self, real_image: torch.Tensor, labels_dataset: torch.Tensor
+        self,
+        real_image: torch.Tensor,
+        labels_dataset: torch.Tensor,
+        labels_target: torch.Tensor,
     ) -> torch.Tensor:
         """
         :param torch.Tensor real_image: real image from dataset
         :param torch.Tensor labels_dataset: real domain labels to image from dataset
+        :param torch.Tensor labels_target: permuted real dmain labels from dataset
         :rtype: torch.Tensor
         :returns: Generator loss
         """
         self.G.train()
         self.D.eval()
 
-        labels_target = permute_labels(labels_dataset)
         fake_image = self.G(self.concat_image_label(real_image, labels_target))
-        out_src, out_cls = self.D(fake_image)
         reconstructed_image = self.G(
             self.concat_image_label(fake_image, labels_dataset)
         )
+        out_fake_src, out_fake_cls = self.D(fake_image)
 
         loss = self.generator_loss(
             real=real_image,
             fake=fake_image,
             reconstructed=reconstructed_image,
             labels_target=labels_target,
+            output_fake_src=out_fake_src,
+            output_fake_cls=out_fake_cls,
         )
 
         self.optimizer_generator.zero_grad()
@@ -102,19 +107,22 @@ class StarGan(nn.Module):
         return loss.item()
 
     def trainD(
-        self, real_image: torch.Tensor, labels_dataset: torch.Tensor
+        self,
+        real_image: torch.Tensor,
+        labels_dataset: torch.Tensor,
+        labels_target: torch.Tensor,
     ) -> torch.Tensor:
         """
         :param torch.Tensor real_image: real image from dataset
         :param torch.Tensor labels_dataset: real domain labels to image from dataset
+        :param torch.Tensor labels_target: permuted real dmain labels from dataset
         :rtype: torch.Tensor
         :returns: Discriminator loss
         """
         self.G.eval()
         self.D.train()
 
-        labels_target = permute_labels(labels_dataset)
-        fake_image = self.G(self.concat_image_label(real_image, labels_target))
+        fake_image = self.G(self.concat_image_label(real_image, labels_target).detach())
         out_src_real, out_cls_real = self.D(real_image)
         out_src_fake, out_cls_fake = self.D(fake_image)
 

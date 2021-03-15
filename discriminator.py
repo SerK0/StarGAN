@@ -69,9 +69,16 @@ class Discriminator(nn.Module):
             ),
         )
 
-        self.output_src = nn.Conv2d(2048, 1, kernel_size=(3, 3), stride=1, padding=1)
+        self.output_src = nn.Conv2d(
+            2048, 1, kernel_size=(3, 3), stride=1, padding=1, bias=False
+        )
         self.output_cls = nn.Conv2d(
-            2048, n_domain, kernel_size=(height // 64, width // 64), stride=1, padding=0
+            2048,
+            n_domain,
+            kernel_size=(height // 64, width // 64),
+            stride=1,
+            padding=0,
+            bias=False,
         )
 
     def forward(self, x) -> Tuple[torch.Tensor, torch.Tensor]:

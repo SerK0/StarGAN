@@ -1,11 +1,30 @@
+device: 'cpu'
+dataloader:
+  celebA: "../celeba/"
+  download: False
+  target_type: "attr"
 training:
+    n_epoch: 10
+    log_step: 10
+    save_step: 1000
+    sample_step: 10
     batch_size: 4
     D:
+        betas: [0.5, 0.999]
         clipping: 1
         lr: 0.0001
-        betas: [0.5, 0.999]
+        n_updates: 5
     G:
+        betas: [0.5, 0.999]
         clipping: 1
         lr: 0.0001
-        betas: [0.5, 0.999]
     shuffle: True
+image:
+  channels: 3
+  height: 128
+  width: 128
+  labels: [8, 9, 11, 20, 22, 24, 31, 39]
+results:
+  generated: "/home/serk0/Yandex_shad/DeepGenerativeModels/homework/2-GAN/training_examples/generated/img_{}.jpg"
+  real: "/home/serk0/Yandex_shad/DeepGenerativeModels/homework/2-GAN/training_examples/real/img_{}.jpg"
+  model: "/home/serk0/Yandex_shad/DeepGenerativeModels/homework/2-GAN/stargan.pt"
