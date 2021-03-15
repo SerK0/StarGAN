@@ -30,7 +30,7 @@ class StarGan(nn.Module):
         self.G = Generator(in_channels=in_channels + n_domain)
         self.D = Discriminator(height, width, n_domain, in_channels)
         self.generator_loss = GeneratorLoss(self.D)
-        self.discriminator_loss = DiscriminatorLoss()
+        self.discriminator_loss = DiscriminatorLoss(self.D)
         self.optimizer_generator = torch.optim.Adam(
             self.G.parameters(), lr=cfg.training.G.lr, betas=cfg.training.G.betas
         )
@@ -127,10 +127,14 @@ class StarGan(nn.Module):
         out_src_fake, out_cls_fake = self.D(fake_image)
 
         loss = self.discriminator_loss(
-            out_src_real, out_src_fake, out_cls_real, labels_dataset
+            real_image,
+            fake_image,
+            out_src_real,
+            out_src_fake,
+            out_cls_real,
+            labels_dataset,
         )
 
-        #####TODO Compute loss for gradient penalty.
         self.optimizer_dicriminator.zero_grad()
         torch.nn.utils.clip_grad_norm_(self.D.parameters(), cfg.training.D.clipping)
         loss.backward()
