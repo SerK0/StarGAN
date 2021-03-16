@@ -4,4 +4,5 @@ __pycache__
 .ipynb_checkpoints
 .pytest_cache
 *.ipynb
-training_examples\
+training_examples
+saved_model

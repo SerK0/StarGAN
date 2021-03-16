@@ -11,8 +11,9 @@ class Generator(nn.Module):
     Generator
     """
 
-    def __init__(self, in_channels) -> None:
+    def __init__(self, device: str, in_channels: int) -> None:
         """
+        :param str device: device type 'cpu' or 'cuda'
         :param int in_channels: number of input channels
         :rtype: None
         """
@@ -76,6 +77,8 @@ class Generator(nn.Module):
         self.conv_final = nn.Sequential(
             nn.Conv2d(64, 3, kernel_size=(7, 7), stride=1, padding=3), nn.Tanh()
         )
+
+        self.to(device)
 
     def forward(self, x: torch.Tensor):
         """

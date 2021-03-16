@@ -13,7 +13,7 @@ def permute_labels(labels_dataset: torch.Tensor) -> torch.Tensor:
     :rtype: torch.Tensor
     :returns: randomly generated labels
     """
-    rand_idx = torch.randperm(labels_dataset.size(1))
-    label_target = labels_dataset[:, rand_idx]
+    rand_idx = torch.randperm(labels_dataset.size(0))
+    label_target = labels_dataset[rand_idx]
 
     return label_target

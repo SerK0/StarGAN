@@ -1,14 +1,14 @@
-device: 'cpu'
+device: 'cuda:0'
 dataloader:
   celebA: "../celeba/"
   download: False
   target_type: "attr"
 training:
     n_epoch: 10
-    log_step: 10
+    log_step: 1000
     save_step: 1000
-    sample_step: 10
-    batch_size: 4
+    sample_step: 1000
+    batch_size: 16
     D:
         betas: [0.5, 0.999]
         clipping: 1
@@ -25,6 +25,5 @@ image:
   width: 128
   labels: [8, 9, 11, 20, 22, 24, 31, 39]
 results:
-  generated: "/home/serk0/Yandex_shad/DeepGenerativeModels/homework/2-GAN/training_examples/generated/img_{}.jpg"
-  real: "/home/serk0/Yandex_shad/DeepGenerativeModels/homework/2-GAN/training_examples/real/img_{}.jpg"
-  model: "/home/serk0/Yandex_shad/DeepGenerativeModels/homework/2-GAN/stargan.pt"
+  generated: "../training_examples/img_{}.jpg"
+  model: "../saved_model/stargan.pt"

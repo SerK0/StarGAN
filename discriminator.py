@@ -12,9 +12,10 @@ class Discriminator(nn.Module):
     """
 
     def __init__(
-        self, height: int, width: int, n_domain: int, in_channels: int = 3
+        self, device: str, height: int, width: int, n_domain: int, in_channels: int = 3
     ) -> None:
         """
+        :param str device: device type 'cpu' or 'cuda'
         :param int height: height of input image
         :param int width: width of input image
         :param int n_domain: how many domains classify
@@ -80,6 +81,8 @@ class Discriminator(nn.Module):
             padding=0,
             bias=False,
         )
+        
+        self.to(device)
 
     def forward(self, x) -> Tuple[torch.Tensor, torch.Tensor]:
         """

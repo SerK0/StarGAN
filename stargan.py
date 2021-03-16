@@ -27,8 +27,8 @@ class StarGan(nn.Module):
 
         self.height = height
         self.width = width
-        self.G = Generator(in_channels=in_channels + n_domain)
-        self.D = Discriminator(height, width, n_domain, in_channels)
+        self.G = Generator(device, in_channels=in_channels + n_domain)
+        self.D = Discriminator(device, height, width, n_domain, in_channels)
         self.generator_loss = GeneratorLoss(self.D)
         self.discriminator_loss = DiscriminatorLoss(self.D)
         self.optimizer_generator = torch.optim.Adam(
@@ -37,6 +37,7 @@ class StarGan(nn.Module):
         self.optimizer_dicriminator = torch.optim.Adam(
             self.D.parameters(), lr=cfg.training.D.lr, betas=cfg.training.D.betas
         )
+        self.device = device
 
         self.to(device)
 
@@ -122,7 +123,9 @@ class StarGan(nn.Module):
         self.G.eval()
         self.D.train()
 
-        fake_image = self.G(self.concat_image_label(real_image, labels_target).detach())
+        fake_image = self.G(
+            self.concat_image_label(real_image, labels_target).detach()
+        ).to(self.device)
         out_src_real, out_cls_real = self.D(real_image)
         out_src_fake, out_cls_fake = self.D(fake_image)
 
